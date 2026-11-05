@@ -1,6 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bago ADM Meet – Bago National High School</title>
-<script src="https://meet.jit.si/external_api.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial,sans-serif;background:#0b3d2e;color:#fff}
 header{padding:14px 16px;background:#062a1f;display:flex;align-items:center;gap:10px}
@@ -8,48 +7,47 @@ header h1{font-size:1.2rem;margin:0}header small{display:block;opacity:.8;font-w
 .logo{width:40px;height:40px;border-radius:50%;background:#f5c518;color:#062a1f;display:grid;place-items:center;font-weight:800}
 main{max-width:520px;margin:auto;padding:16px}.card{background:#fff;color:#222;border-radius:14px;padding:18px;margin-bottom:14px}
 label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;padding:12px;font-size:1rem;border:1px solid #bbb;border-radius:8px}
-.modes{display:flex;gap:8px}.modes button{flex:1;padding:12px;border:2px solid #0b3d2e;background:#fff;border-radius:8px;font-weight:700;color:#0b3d2e}
-.modes button.on{background:#0b3d2e;color:#fff}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400}.chk input{width:auto}
 #join{width:100%;margin-top:16px;padding:14px;font-size:1.1rem;background:#f5c518;border:0;border-radius:8px;font-weight:800;color:#062a1f}
-.note{font-size:.85rem;opacity:.9;line-height:1.4}#meet{display:none;height:100vh;width:100%}
-#bar{display:none;background:#062a1f;padding:6px 10px;justify-content:space-between;align-items:center}
+.note{font-size:.85rem;opacity:.9;line-height:1.4}#meet{display:none;width:100%}
+#bar{display:none;background:#062a1f;padding:6px 10px;justify-content:space-between;align-items:center;height:44px}
 #bar button{background:#c62828;color:#fff;border:0;padding:8px 12px;border-radius:6px;font-weight:700}
 </style></head><body>
 <header id="hdr"><div class="logo">B</div><h1>Bago ADM Meet<small>Bago National High School · Roxas City</small></h1></header>
 <div id="bar"><span id="rl"></span><button onclick="leave()">Leave</button></div>
 <main id="home"><div class="card">
-<label>I am a</label><div class="modes"><button id="mS" class="on" onclick="setMode('s')">Student</button><button id="mT" onclick="setMode('t')">Teacher</button></div>
 <label for="nm">Your name</label><input id="nm" maxlength="40" placeholder="e.g. Juan Dela Cruz">
-<label for="rm">Room</label><select id="rm" onchange="cu.style.display=this.value=='custom'?'block':'none'"></select>
-<input id="cu" style="display:none;margin-top:8px" maxlength="30" placeholder="Custom room name (e.g. PTC-Meeting)">
-<button id="join" onclick="join()">Join Meeting</button>
-<p class="note" id="hint">Students join with camera off and mic muted to save data. You can turn them on inside the meeting.</p>
-</div>
-<p class="note">ℹ️ Meetings run on Jitsi's free public servers (meet.jit.si). No passwords or personal data are collected by this page. Tip: share the room name only with your class.</p></main>
+<label for="rm">Grade level</label><select id="rm"><option>Grade 11</option><option>Grade 12</option></select>
+<label class="chk"><input type="checkbox" id="ao"> Audio only mode (very weak signal)</label>
+<button id="join" onclick="join()">Join Class</button>
+<p class="note">You join with camera off and mic muted to save data. Unmute only when called.</p></div>
+<p class="note">ℹ️ Meetings run on Jitsi's free public servers (meet.jit.si). No passwords or personal data are collected.</p></main>
 <div id="meet"></div>
 <script>
-const SLUG="BagoADMMeet-1e845542";
-const ROOMS={"Grade 11":["Grade 11 - HUMSS A","Grade 11 - HUMSS B","Grade 11 - ABM","Grade 11 - STEM","Grade 11 - TVL"],"Grade 12":["Grade 12 - HUMSS A","Grade 12 - HUMSS B","Grade 12 - ABM","Grade 12 - STEM","Grade 12 - TVL"],"Other":["Faculty Meeting","ADM Consultation"]};
-let mode='s',api;const rm=document.getElementById('rm'),cu=document.getElementById('cu');
-for(const g in ROOMS){const o=document.createElement('optgroup');o.label=g;ROOMS[g].forEach(r=>o.append(new Option(r,r)));rm.append(o)}
-rm.append(new Option('➕ Custom room…','custom'));
-const p=new URLSearchParams(location.search);if(p.get('room')){const r=p.get('room');if([...rm.options].some(o=>o.value==r))rm.value=r;else{rm.value='custom';cu.style.display='block';cu.value=r}}
-if(p.get('mode')=='teacher')setMode('t');
-document.getElementById('nm').value=localStorage.getItem('bam-name')||'';
-function setMode(m){mode=m;mS.classList.toggle('on',m=='s');mT.classList.toggle('on',m=='t');
-hint.textContent=m=='s'?'Students join with camera off and mic muted to save data. You can turn them on inside the meeting.':'Teacher mode: camera and mic on. Join first so you become the moderator.'}
-function slug(s){return s.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+const HOST=false,SLUG="BagoADMMeet-1e845542";let api;
+nm.value=localStorage.getItem('bam-name')||'';
+const q=new URLSearchParams(location.search).get('grade');if(q=='11'||q=='12')rm.value='Grade '+q;
+function load(cb){if(window.JitsiMeetExternalAPI)return cb();const s=document.createElement('script');s.src='https://meet.jit.si/external_api.js';s.onload=cb;s.onerror=()=>{alert('Cannot reach meeting server. Check your data and try again.');leave()};document.head.append(s)}
 function join(){const name=nm.value.trim();if(!name){alert('Please enter your name');return}
-const label=rm.value=='custom'?cu.value.trim():rm.value;if(!label){alert('Please type a room name');return}
-localStorage.setItem('bam-name',name);const st=mode=='s';
-home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
-rl.textContent=label+(st?' (Student)':' (Teacher)');
-api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:SLUG+'-'+slug(label),parentNode:meet,width:'100%',height:'100%',
-userInfo:{displayName:(st?'':'Teacher ')+name},
-configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,startWithVideoMuted:st,startWithAudioMuted:st,startAudioOnly:false,
-disableDeepLinking:true,resolution:st?360:720,constraints:{video:{height:{ideal:st?360:720,max:720}}},subject:'Bago ADM Meet – '+label},
-interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,
-TOOLBAR_BUTTONS:['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','fullscreen','settings','videoquality','hangup']}});
-api.addListener('readyToClose',leave)}
-function leave(){if(api){api.dispose();api=null}meet.innerHTML='';meet.style.display='none';bar.style.display='none';hdr.style.display='flex';home.style.display='block'}
+localStorage.setItem('bam-name',name);const label=rm.value,audio=ao.checked;
+join.disabled=true;home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
+rl.textContent=label+(HOST?' (Host)':'');
+const H=HOST?360:180;
+load(()=>{api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
+userInfo:{displayName:(HOST?'Teacher ':'')+name},
+configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,disableDeepLinking:true,
+startWithVideoMuted:!HOST||audio,startWithAudioMuted:!HOST,startAudioOnly:audio,
+resolution:H,constraints:{video:{height:{ideal:H,max:H,min:90},frameRate:{max:15}}},
+channelLastN:HOST?4:(audio?0:1),lastNLimits:{5:HOST?4:1},
+disableSimulcast:false,enableLayerSuspension:true,
+videoQuality:{preferredCodec:'VP8',maxBitratesVideo:{low:100000,standard:250000,high:HOST?500000:250000}},
+p2p:{enabled:false},disableAudioLevels:true,disableReactions:true,disableReactionsModeration:true,
+disableVirtualBackground:true,hideConferenceTimer:true,disableSelfViewSettings:false,
+disabledSounds:['PARTICIPANT_JOINED_SOUND','PARTICIPANT_LEFT_SOUND','REACTION_SOUND','RAISE_HAND_SOUND','INCOMING_MSG_SOUND','TALK_WHILE_MUTED_SOUND','E2EE_OFF_SOUND','E2EE_ON_SOUND','KNOCKING_PARTICIPANT_SOUND','LIVE_STREAMING_OFF_SOUND','LIVE_STREAMING_ON_SOUND','RECORDING_OFF_SOUND','RECORDING_ON_SOUND'],
+filmstrip:{disabled:!HOST},disableTileView:!HOST,
+subject:'Bago ADM Meet – '+label},
+interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,DISABLE_VIDEO_BACKGROUND:true,FILM_STRIP_MAX_HEIGHT:HOST?120:60,
+TOOLBAR_BUTTONS:HOST?['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','security','mute-everyone','videoquality','fullscreen','settings','hangup']:['microphone','camera','chat','raisehand','videoquality','hangup']}});
+api.addListener('readyToClose',leave)})}
+function leave(){if(api){api.dispose();api=null}meet.innerHTML='';meet.style.display='none';bar.style.display='none';hdr.style.display='flex';home.style.display='block';join.disabled=false}
 </script></body></html>
