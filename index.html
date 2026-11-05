@@ -21,19 +21,21 @@ label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;pa
 <label class="chk"><input type="checkbox" id="ao"> Audio only mode (very weak signal)</label>
 <button id="join" onclick="join()">Join Class</button>
 <p class="note">You join with camera off and mic muted to save data. Unmute only when called.</p></div>
-<p class="note">ℹ️ Meetings run on Jitsi's free public servers (meet.jit.si). No passwords or personal data are collected.</p></main>
+<p class="note">ℹ️ Meetings run on Jitsi's free public servers (jitsi.riot.im, backup meet.guifi.net). No passwords or personal data are collected.</p></main>
 <div id="meet"></div>
 <script>
 const HOST=false,SLUG="BagoADMMeet-1e845542";let api;
 nm.value=localStorage.getItem('bam-name')||'';
 const q=new URLSearchParams(location.search).get('grade');if(q=='11'||q=='12')rm.value='Grade '+q;
-function load(cb){if(window.JitsiMeetExternalAPI)return cb();const s=document.createElement('script');s.src='https://meet.jit.si/external_api.js';s.onload=cb;s.onerror=()=>{alert('Cannot reach meeting server. Check your data and try again.');leave()};document.head.append(s)}
+const DOMAINS=['jitsi.riot.im','meet.guifi.net'];let DOM=DOMAINS[0];
+function load(cb,i=0){if(window.JitsiMeetExternalAPI)return cb();if(i>=DOMAINS.length){alert('Cannot reach meeting server. Check your data and try again.');leave();return}
+DOM=DOMAINS[i];const s=document.createElement('script');s.src='https://'+DOM+'/external_api.js';s.onload=cb;s.onerror=()=>{s.remove();load(cb,i+1)};document.head.append(s)}
 function join(){const name=nm.value.trim();if(!name){alert('Please enter your name');return}
 localStorage.setItem('bam-name',name);const label=rm.value,audio=ao.checked;
 join.disabled=true;home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
 rl.textContent=label+(HOST?' (Host)':'');
 const H=HOST?360:180;
-load(()=>{api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
+load(()=>{api=new JitsiMeetExternalAPI(DOM,{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
 userInfo:{displayName:(HOST?'Teacher ':'')+name},
 configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,disableDeepLinking:true,
 startWithVideoMuted:!HOST||audio,startWithAudioMuted:!HOST,startAudioOnly:audio,

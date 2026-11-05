@@ -1,0 +1,60 @@
+T=r'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bago ADM Meet – __TITLE__</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial,sans-serif;background:#0b3d2e;color:#fff}
+header{padding:14px 16px;background:#062a1f;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.2rem;margin:0}header small{display:block;opacity:.8;font-weight:400}
+.logo{width:40px;height:40px;border-radius:50%;background:#f5c518;color:#062a1f;display:grid;place-items:center;font-weight:800}
+main{max-width:520px;margin:auto;padding:16px}.card{background:#fff;color:#222;border-radius:14px;padding:18px;margin-bottom:14px}
+label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;padding:12px;font-size:1rem;border:1px solid #bbb;border-radius:8px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400}.chk input{width:auto}
+#join{width:100%;margin-top:16px;padding:14px;font-size:1.1rem;background:#f5c518;border:0;border-radius:8px;font-weight:800;color:#062a1f}
+.note{font-size:.85rem;opacity:.9;line-height:1.4}#meet{display:none;width:100%}
+#bar{display:none;background:#062a1f;padding:6px 10px;justify-content:space-between;align-items:center;height:44px}
+#bar button{background:#c62828;color:#fff;border:0;padding:8px 12px;border-radius:6px;font-weight:700}
+</style></head><body>
+<header id="hdr"><div class="logo">B</div><h1>Bago ADM Meet__BADGE__<small>Bago National High School · Roxas City</small></h1></header>
+<div id="bar"><span id="rl"></span><button onclick="leave()">Leave</button></div>
+<main id="home"><div class="card">
+<label for="nm">Your name</label><input id="nm" maxlength="40" placeholder="e.g. Juan Dela Cruz">
+<label for="rm">Grade level</label><select id="rm"><option>Grade 11</option><option>Grade 12</option></select>
+<label class="chk"><input type="checkbox" id="ao"> Audio only mode (very weak signal)</label>
+<button id="join" onclick="join()">__BTN__</button>
+<p class="note">__HINT__</p></div>
+<p class="note">ℹ️ Meetings run on Jitsi's free public servers (jitsi.riot.im, backup meet.guifi.net). No passwords or personal data are collected.</p></main>
+<div id="meet"></div>
+<script>
+const HOST=__HOST__,SLUG="BagoADMMeet-1e845542";let api;
+nm.value=localStorage.getItem('bam-name')||'';
+const q=new URLSearchParams(location.search).get('grade');if(q=='11'||q=='12')rm.value='Grade '+q;
+const DOMAINS=['jitsi.riot.im','meet.guifi.net'];let DOM=DOMAINS[0];
+function load(cb,i=0){if(window.JitsiMeetExternalAPI)return cb();if(i>=DOMAINS.length){alert('Cannot reach meeting server. Check your data and try again.');leave();return}
+DOM=DOMAINS[i];const s=document.createElement('script');s.src='https://'+DOM+'/external_api.js';s.onload=cb;s.onerror=()=>{s.remove();load(cb,i+1)};document.head.append(s)}
+function join(){const name=nm.value.trim();if(!name){alert('Please enter your name');return}
+localStorage.setItem('bam-name',name);const label=rm.value,audio=ao.checked;
+join.disabled=true;home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
+rl.textContent=label+(HOST?' (Host)':'');
+const H=HOST?360:180;
+load(()=>{api=new JitsiMeetExternalAPI(DOM,{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
+userInfo:{displayName:(HOST?'Teacher ':'')+name},
+configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,disableDeepLinking:true,
+startWithVideoMuted:!HOST||audio,startWithAudioMuted:!HOST,startAudioOnly:audio,
+resolution:H,constraints:{video:{height:{ideal:H,max:H,min:90},frameRate:{max:15}}},
+channelLastN:HOST?4:(audio?0:1),lastNLimits:{5:HOST?4:1},
+disableSimulcast:false,enableLayerSuspension:true,
+videoQuality:{preferredCodec:'VP8',maxBitratesVideo:{low:100000,standard:250000,high:HOST?500000:250000}},
+p2p:{enabled:false},disableAudioLevels:true,disableReactions:true,disableReactionsModeration:true,
+disableVirtualBackground:true,hideConferenceTimer:true,disableSelfViewSettings:false,
+disabledSounds:['PARTICIPANT_JOINED_SOUND','PARTICIPANT_LEFT_SOUND','REACTION_SOUND','RAISE_HAND_SOUND','INCOMING_MSG_SOUND','TALK_WHILE_MUTED_SOUND','E2EE_OFF_SOUND','E2EE_ON_SOUND','KNOCKING_PARTICIPANT_SOUND','LIVE_STREAMING_OFF_SOUND','LIVE_STREAMING_ON_SOUND','RECORDING_OFF_SOUND','RECORDING_ON_SOUND'],
+filmstrip:{disabled:!HOST},disableTileView:!HOST,
+subject:'Bago ADM Meet – '+label},
+interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,DISABLE_VIDEO_BACKGROUND:true,FILM_STRIP_MAX_HEIGHT:HOST?120:60,
+TOOLBAR_BUTTONS:HOST?['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','security','mute-everyone','videoquality','fullscreen','settings','hangup']:['microphone','camera','chat','raisehand','videoquality','hangup']}});
+api.addListener('readyToClose',leave)})}
+function leave(){if(api){api.dispose();api=null}meet.innerHTML='';meet.style.display='none';bar.style.display='none';hdr.style.display='flex';home.style.display='block';join.disabled=false}
+</script></body></html>'''
+for f,h in [('index.html',0),('host.html',1)]:
+    s=T.replace('__HOST__','true' if h else 'false').replace('__TITLE__','Host' if h else 'Bago National High School')
+    s=s.replace('__BADGE__',' · Host' if h else '').replace('__BTN__','Start / Join as Host' if h else 'Join Class')
+    s=s.replace('__HINT__','Host mode: camera and mic on (360p, saves upload). Join first so you become moderator (no sign-in needed).' if h else 'You join with camera off and mic muted to save data. Unmute only when called.')
+    open(f,'w').write(s)
