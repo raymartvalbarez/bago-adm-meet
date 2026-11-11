@@ -21,7 +21,7 @@ label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;pa
 <label class="chk"><input type="checkbox" id="ao"> Audio only mode (very weak signal)</label>
 <button id="join" onclick="join()">__BTN__</button>
 <p class="note">__HINT__</p></div>
-<p class="note">ℹ️ Low-data meeting: 360p video, limited live cameras, and a closer public Jitsi server (meet.fsci.in, Mumbai). Backup: jitsi.riot.im. No sign-in. Speed still depends on your internet.</p></main>
+<p class="note">ℹ️ Low-data meeting: 360p video, limited live cameras, and a closer public Jitsi server (meet.fsci.in, Mumbai). Backup: jitsi.riot.im. No sign-in. Speed still depends on your internet.</p>__EXTRA__</main>
 <div id="meet"></div>
 <script>
 const HOST=__HOST__,SLUG="BagoADMMeet-1e845542";let api;
@@ -64,4 +64,5 @@ for f,h in [('index.html',0),('host.html',1)]:
     s=T.replace('__HOST__','true' if h else 'false').replace('__TITLE__','Host' if h else 'Bago National High School')
     s=s.replace('__BADGE__',' · Host' if h else '').replace('__BTN__','Start / Join as Host' if h else 'Join Class')
     s=s.replace('__HINT__','Host mode: camera and mic on at 360p to save data. Join first so you become moderator (no sign-in needed).' if h else 'You join with camera off and mic muted to save data. Unmute only when called. Tick Audio only on a very weak signal.')
+    s=s.replace('__EXTRA__','<p class="note"><a href="host-notify.html" style="color:#f5c518">Notify students (teacher only)</a></p>' if h else '')
     open(f,'w').write(s)

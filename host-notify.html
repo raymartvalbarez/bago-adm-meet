@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Notify students – Bago ADM (teacher)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial,sans-serif;background:#0b3d2e;color:#fff}
+header{padding:14px 16px;background:#062a1f;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.2rem;margin:0}header small{display:block;opacity:.8;font-weight:400}
+.logo{width:40px;height:40px;border-radius:50%;background:#f5c518;color:#062a1f;display:grid;place-items:center;font-weight:800}
+main{max-width:520px;margin:auto;padding:16px}.card{background:#fff;color:#222;border-radius:14px;padding:18px;margin-bottom:14px}
+label{display:block;font-weight:600;margin:12px 0 6px}input,select,textarea{width:100%;padding:12px;font-size:1rem;border:1px solid #bbb;border-radius:8px;font-family:inherit}
+textarea{min-height:110px;resize:vertical}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.presets button{border:1px solid #0b3d2e;background:#fff;color:#0b3d2e;border-radius:999px;padding:7px 10px;font-weight:700}
+#send{width:100%;margin-top:16px;padding:14px;font-size:1.1rem;background:#f5c518;border:0;border-radius:8px;font-weight:800;color:#062a1f}
+.note{font-size:.85rem;opacity:.9;line-height:1.4}#st{margin-top:10px;font-weight:700}
+#st.err{color:#ffd4d4}a{color:#f5c518}
+</style>
+</head>
+<body>
+<header><div class="logo">B</div><h1>Notify students<small>Teacher only · Bago National High School</small></h1></header>
+<main>
+<div class="card">
+<label for="title">Title</label>
+<input id="title" maxlength="80" placeholder="e.g. Quiz is open">
+<label for="msg">Message</label>
+<textarea id="msg" maxlength="500" placeholder="e.g. Please open today's General Math quiz."></textarea>
+<label for="link">Optional link (opens when a student taps the notice)</label>
+<input id="link" placeholder="https://">
+<div class="presets">
+<button type="button" data-p="https://raymartvalbarez.github.io/bago-adm-meet/">Meet (student)</button>
+<button type="button" data-p="https://raymartvalbarez.github.io/adm-portal/#quiz">Portal · Quiz</button>
+<button type="button" data-p="https://raymartvalbarez.github.io/adm-portal/#tasks">Portal · Tasks</button>
+<button type="button" data-p="https://raymartvalbarez.github.io/adm-portal/#games">Portal · Games</button>
+<button type="button" data-p="">Clear link</button>
+</div>
+<label for="target">Send to</label>
+<select id="target">
+<option value="all">All students</option>
+<option value="11">Grade 11 only</option>
+<option value="12">Grade 12 only</option>
+</select>
+<button id="send" type="button">Send announcement</button>
+<div id="st"></div>
+</div>
+<p class="note">This page is for you, not for students. Announcements go to learners who installed the Bago SHS ADM Student app and turned on alerts. You can also send from the Notify tab in the teacher app.</p>
+<p class="note"><a href="host.html">Back to ADM Meet host</a></p>
+</main>
+<script>
+const ALL="bnhs-adm-959690119404cafa8705e7b91d3034c6";
+const TOPICS={all:ALL,"11":ALL+"-g11","12":ALL+"-g12"};
+document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{link.value=b.getAttribute("data-p")||""});
+send.onclick=async()=>{
+  const titleEl=document.getElementById("title"), msgEl=document.getElementById("msg");
+  const linkEl=document.getElementById("link"), targetEl=document.getElementById("target");
+  const title=titleEl.value.trim(), message=msgEl.value.trim(), click=linkEl.value.trim(), target=targetEl.value;
+  st.className="";
+  if(!message){st.className="err";st.textContent="Please type a message.";return}
+  if(click && !/^https:\/\//i.test(click)){st.className="err";st.textContent="Link must start with https://";return}
+  send.disabled=true;st.textContent="Sending…";
+  try{
+    const body={topic:TOPICS[target]||ALL,message,priority:4,tags:["bell"]};
+    if(title) body.title=title;
+    if(click) body.click=click;
+    const r=await fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const t=await r.text();
+    if(!r.ok) throw new Error(t||("Server returned "+r.status));
+    st.textContent="Sent to students.";
+  }catch(e){st.className="err";st.textContent="Send failed: "+(e.message||e)}
+  send.disabled=false;
+};
+</script>
+</body>
+</html>
