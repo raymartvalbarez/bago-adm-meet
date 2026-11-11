@@ -60,8 +60,11 @@ interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,DISA
 DISABLE_JOIN_LEAVE_NOTIFICATIONS:true,DISABLE_PRESENCE_STATUS:true,DISABLE_RINGING:true,
 SHOW_CHROME_EXTENSION_BANNER:false,HIDE_INVITE_MORE_HEADER:true,DISABLE_TRANSCRIPTION_SUBTITLES:true,
 FILM_STRIP_MAX_HEIGHT:HOST?120:60,
+VIDEO_LAYOUT_FIT:'nocrop',MAXIMUM_ZOOMING_COEFFICIENT:1,VERTICAL_FILMSTRIP:!!HOST,
 TOOLBAR_BUTTONS:HOST?['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','security','mute-everyone','videoquality','fullscreen','settings','hangup']:['microphone','camera','chat','raisehand','videoquality','hangup']}});
-api.addListener('videoConferenceJoined',function(){try{api.executeCommand('setVideoQuality',H)}catch(e){}});
+api.addListener('videoConferenceJoined',function(){try{api.executeCommand('setVideoQuality',H)}catch(e){}
+if(!HOST)setTimeout(function(){try{api.executeCommand('toggleFilmStrip')}catch(e){}},500)});
+let fsFix=0;if(!HOST)api.addListener('filmstripDisplayChanged',function(e){if(e&&e.visible&&fsFix++<6)setTimeout(function(){try{api.executeCommand('toggleFilmStrip')}catch(x){}},300)});
 api.addListener('readyToClose',leave)})}
 function leave(){if(api){api.dispose();api=null}meet.innerHTML='';room.classList.remove('on');document.body.classList.remove('inroom');hdr.style.display='flex';home.style.display='block';join.disabled=false}
 </script></body></html>
