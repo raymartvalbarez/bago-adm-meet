@@ -21,40 +21,47 @@ label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;pa
 <label class="chk"><input type="checkbox" id="ao"> Audio only mode (very weak signal)</label>
 <button id="join" onclick="join()">__BTN__</button>
 <p class="note">__HINT__</p></div>
-<p class="note">ℹ️ Meetings run on Jitsi's free public servers (jitsi.riot.im, backup meet.guifi.net). No passwords or personal data are collected.</p></main>
+<p class="note">ℹ️ Low-data meeting: 360p video, limited live cameras, and a closer public Jitsi server (meet.fsci.in, Mumbai). Backup: jitsi.riot.im. No sign-in. Speed still depends on your internet.</p></main>
 <div id="meet"></div>
 <script>
 const HOST=__HOST__,SLUG="BagoADMMeet-1e845542";let api;
 nm.value=localStorage.getItem('bam-name')||'';
 const q=new URLSearchParams(location.search).get('grade');if(q=='11'||q=='12')rm.value='Grade '+q;
-const DOMAINS=['jitsi.riot.im','meet.guifi.net'];let DOM=DOMAINS[0];
+const DOMAINS=['meet.fsci.in','jitsi.riot.im'];let DOM=DOMAINS[0];
 function load(cb,i=0){if(window.JitsiMeetExternalAPI)return cb();if(i>=DOMAINS.length){alert('Cannot reach meeting server. Check your data and try again.');leave();return}
 DOM=DOMAINS[i];const s=document.createElement('script');s.src='https://'+DOM+'/external_api.js';s.onload=cb;s.onerror=()=>{s.remove();load(cb,i+1)};document.head.append(s)}
 function join(){const name=nm.value.trim();if(!name){alert('Please enter your name');return}
 localStorage.setItem('bam-name',name);const label=rm.value,audio=ao.checked;
 join.disabled=true;home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
 rl.textContent=label+(HOST?' (Host)':'');
-const H=HOST?360:180;
+const H=360, lastN=audio?0:(HOST?6:4);
 load(()=>{api=new JitsiMeetExternalAPI(DOM,{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
 userInfo:{displayName:(HOST?'Teacher ':'')+name},
-configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,disableDeepLinking:true,
+configOverwrite:{prejoinConfig:{enabled:false},prejoinPageEnabled:false,enableWelcomePage:false,welcomePage:{disabled:true},
+disableDeepLinking:true,disableThirdPartyRequests:true,
 startWithVideoMuted:!HOST||audio,startWithAudioMuted:!HOST,startAudioOnly:audio,
-resolution:H,constraints:{video:{height:{ideal:H,max:H,min:90},frameRate:{max:15}}},
-channelLastN:HOST?4:(audio?0:1),lastNLimits:{5:HOST?4:1},
+resolution:H,constraints:{video:{height:{ideal:H,max:H,min:180},frameRate:{ideal:15,max:15}}},
+maxFullResolutionParticipants:1,channelLastN:lastN,startLastN:lastN,lastNLimits:{5:lastN},
 disableSimulcast:false,enableLayerSuspension:true,
-videoQuality:{preferredCodec:'VP8',maxBitratesVideo:{low:100000,standard:250000,high:HOST?500000:250000}},
-p2p:{enabled:false},disableAudioLevels:true,disableReactions:true,disableReactionsModeration:true,
-disableVirtualBackground:true,hideConferenceTimer:true,disableSelfViewSettings:false,
+videoQuality:{preferredCodec:'VP8',maxBitratesVideo:{low:100000,standard:250000,high:250000,ssHigh:500000},
+minHeightForQualityLvl:{180:'low',360:'standard'}},
+p2p:{enabled:true},disableAudioLevels:true,disableReactions:true,disableReactionsModeration:true,
+disablePolls:true,disableVirtualBackground:true,disableInviteFunctions:true,hideConferenceTimer:true,
+disableSelfViewSettings:false,enableNoisyMicDetection:false,disableTileEnlargement:true,
 disabledSounds:['PARTICIPANT_JOINED_SOUND','PARTICIPANT_LEFT_SOUND','REACTION_SOUND','RAISE_HAND_SOUND','INCOMING_MSG_SOUND','TALK_WHILE_MUTED_SOUND','E2EE_OFF_SOUND','E2EE_ON_SOUND','KNOCKING_PARTICIPANT_SOUND','LIVE_STREAMING_OFF_SOUND','LIVE_STREAMING_ON_SOUND','RECORDING_OFF_SOUND','RECORDING_ON_SOUND'],
-filmstrip:{disabled:!HOST},disableTileView:!HOST,
+filmstrip:{disabled:!HOST},disableTileView:!HOST,notifications:[],
 subject:'Bago ADM Meet – '+label},
-interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,DISABLE_VIDEO_BACKGROUND:true,FILM_STRIP_MAX_HEIGHT:HOST?120:60,
+interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,SHOW_JITSI_WATERMARK:false,DISABLE_VIDEO_BACKGROUND:true,
+DISABLE_JOIN_LEAVE_NOTIFICATIONS:true,DISABLE_PRESENCE_STATUS:true,DISABLE_RINGING:true,
+SHOW_CHROME_EXTENSION_BANNER:false,HIDE_INVITE_MORE_HEADER:true,DISABLE_TRANSCRIPTION_SUBTITLES:true,
+FILM_STRIP_MAX_HEIGHT:HOST?120:60,
 TOOLBAR_BUTTONS:HOST?['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','security','mute-everyone','videoquality','fullscreen','settings','hangup']:['microphone','camera','chat','raisehand','videoquality','hangup']}});
+api.addListener('videoConferenceJoined',function(){try{api.executeCommand('setVideoQuality',H)}catch(e){}});
 api.addListener('readyToClose',leave)})}
 function leave(){if(api){api.dispose();api=null}meet.innerHTML='';meet.style.display='none';bar.style.display='none';hdr.style.display='flex';home.style.display='block';join.disabled=false}
 </script></body></html>'''
 for f,h in [('index.html',0),('host.html',1)]:
     s=T.replace('__HOST__','true' if h else 'false').replace('__TITLE__','Host' if h else 'Bago National High School')
     s=s.replace('__BADGE__',' · Host' if h else '').replace('__BTN__','Start / Join as Host' if h else 'Join Class')
-    s=s.replace('__HINT__','Host mode: camera and mic on (360p, saves upload). Join first so you become moderator (no sign-in needed).' if h else 'You join with camera off and mic muted to save data. Unmute only when called.')
+    s=s.replace('__HINT__','Host mode: camera and mic on at 360p to save data. Join first so you become moderator (no sign-in needed).' if h else 'You join with camera off and mic muted to save data. Unmute only when called. Tick Audio only on a very weak signal.')
     open(f,'w').write(s)
