@@ -1,4 +1,4 @@
-T=r'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+T=r'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Bago ADM Meet – __TITLE__</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial,sans-serif;background:#0b3d2e;color:#fff}
@@ -9,12 +9,15 @@ main{max-width:520px;margin:auto;padding:16px}.card{background:#fff;color:#222;b
 label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;padding:12px;font-size:1rem;border:1px solid #bbb;border-radius:8px}
 .chk{display:flex;gap:8px;align-items:center;font-weight:400}.chk input{width:auto}
 #join{width:100%;margin-top:16px;padding:14px;font-size:1.1rem;background:#f5c518;border:0;border-radius:8px;font-weight:800;color:#062a1f}
-.note{font-size:.85rem;opacity:.9;line-height:1.4}#meet{display:none;width:100%}
-#bar{display:none;background:#062a1f;padding:6px 10px;justify-content:space-between;align-items:center;height:44px}
+.note{font-size:.85rem;opacity:.9;line-height:1.4}
+#room{display:none;position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;height:var(--app-h,100dvh);flex-direction:column;background:#000;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);z-index:10}
+#room.on{display:flex}#meet{flex:1 1 auto;min-height:0;width:100%;position:relative}#meet iframe{display:block;width:100%!important;height:100%!important;border:0}
+body.inroom{overflow:hidden}
+#bar{display:flex;flex:0 0 44px;background:#062a1f;padding:6px 10px;justify-content:space-between;align-items:center;height:44px}
 #bar button{background:#c62828;color:#fff;border:0;padding:8px 12px;border-radius:6px;font-weight:700}
 </style></head><body>
 <header id="hdr"><div class="logo">B</div><h1>Bago ADM Meet__BADGE__<small>Bago National High School · Roxas City</small></h1></header>
-<div id="bar"><span id="rl"></span><button onclick="leave()">Leave</button></div>
+
 <main id="home"><div class="card">
 <label for="nm">Your name</label><input id="nm" maxlength="40" placeholder="e.g. Juan Dela Cruz">
 <label for="rm">Grade level</label><select id="rm"><option>Grade 11</option><option>Grade 12</option></select>
@@ -22,9 +25,11 @@ label{display:block;font-weight:600;margin:12px 0 6px}input,select{width:100%;pa
 <button id="join" onclick="join()">__BTN__</button>
 <p class="note">__HINT__</p></div>
 <p class="note">ℹ️ Low-data meeting: 360p video, limited live cameras, and a closer public Jitsi server (meet.fsci.in, Mumbai). Backup: jitsi.riot.im. No sign-in. Speed still depends on your internet.</p>__EXTRA__</main>
-<div id="meet"></div>
+<div id="room"><div id="bar"><span id="rl"></span><button onclick="leave()">Leave</button></div><div id="meet"></div></div>
 <script>
 const HOST=__HOST__,SLUG="BagoADMMeet-1e845542";let api;
+function fitH(){const h=(window.visualViewport&&visualViewport.height)||window.innerHeight;document.documentElement.style.setProperty('--app-h',Math.round(h)+'px')}
+fitH();addEventListener('resize',fitH);addEventListener('orientationchange',()=>setTimeout(fitH,300));if(window.visualViewport)visualViewport.addEventListener('resize',fitH);
 nm.value=localStorage.getItem('bam-name')||'';
 const q=new URLSearchParams(location.search).get('grade');if(q=='11'||q=='12')rm.value='Grade '+q;
 const DOMAINS=['meet.fsci.in','jitsi.riot.im'];let DOM=DOMAINS[0];
@@ -32,7 +37,7 @@ function load(cb,i=0){if(window.JitsiMeetExternalAPI)return cb();if(i>=DOMAINS.l
 DOM=DOMAINS[i];const s=document.createElement('script');s.src='https://'+DOM+'/external_api.js';s.onload=cb;s.onerror=()=>{s.remove();load(cb,i+1)};document.head.append(s)}
 function join(){const name=nm.value.trim();if(!name){alert('Please enter your name');return}
 localStorage.setItem('bam-name',name);const label=rm.value,audio=ao.checked;
-join.disabled=true;home.style.display='none';hdr.style.display='none';bar.style.display='flex';meet.style.display='block';meet.style.height='calc(100vh - 44px)';
+join.disabled=true;home.style.display='none';hdr.style.display='none';fitH();room.classList.add('on');document.body.classList.add('inroom');
 rl.textContent=label+(HOST?' (Host)':'');
 const H=360, lastN=audio?0:(HOST?6:4);
 load(()=>{api=new JitsiMeetExternalAPI(DOM,{roomName:SLUG+'-'+label.replace(' ','-'),parentNode:meet,width:'100%',height:'100%',
@@ -58,7 +63,7 @@ FILM_STRIP_MAX_HEIGHT:HOST?120:60,
 TOOLBAR_BUTTONS:HOST?['microphone','camera','desktop','chat','raisehand','tileview','participants-pane','security','mute-everyone','videoquality','fullscreen','settings','hangup']:['microphone','camera','chat','raisehand','videoquality','hangup']}});
 api.addListener('videoConferenceJoined',function(){try{api.executeCommand('setVideoQuality',H)}catch(e){}});
 api.addListener('readyToClose',leave)})}
-function leave(){if(api){api.dispose();api=null}meet.innerHTML='';meet.style.display='none';bar.style.display='none';hdr.style.display='flex';home.style.display='block';join.disabled=false}
+function leave(){if(api){api.dispose();api=null}meet.innerHTML='';room.classList.remove('on');document.body.classList.remove('inroom');hdr.style.display='flex';home.style.display='block';join.disabled=false}
 </script></body></html>'''
 for f,h in [('index.html',0),('host.html',1)]:
     s=T.replace('__HOST__','true' if h else 'false').replace('__TITLE__','Host' if h else 'Bago National High School')
